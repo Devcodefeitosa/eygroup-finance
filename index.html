@@ -4,9 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <title>EY Group Finance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
+    <title>EY GROUP | Alpha Finance</title>
     <style>
-        body { margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #000814; }
+        .tech-font { font-family: 'Orbitron', sans-serif; }
+        .glass { background: rgba(2, 27, 75, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
+        .glow-blue { box-shadow: 0 0 20px rgba(0, 102, 255, 0.3); }
     </style>
 </head>
 <body>
@@ -17,89 +21,146 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <script type="text/babel">
-        function EYGroupFinanceApp() {
-            const dashboardCards = [
-                { title: 'Receitas', value: 'R$ 245.430,00', color: 'text-green-600' },
-                { title: 'Despesas', value: 'R$ 96.680,00', color: 'text-red-600' },
-                { title: 'Lucro Líquido', value: 'R$ 148.750,00', color: 'text-blue-700' },
-                { title: 'Fluxo de Caixa', value: '+18%', color: 'text-purple-700' },
-            ];
+        const { useState, useEffect } = React;
 
-            const transactions = [
-                { cliente: 'Cliente Premium', categoria: 'Venda', valor: 'R$ 12.450,00', status: 'Receita' },
-                { cliente: 'Meta Ads', categoria: 'Marketing', valor: 'R$ 3.200,00', status: 'Despesa' },
-                { cliente: 'Funcionários', categoria: 'RH', valor: 'R$ 8.900,00', status: 'Despesa' },
-            ];
+        function EYGroupApp() {
+            const [isLogged, setIsLogged] = useState(false);
+            const [user, setUser] = useState("");
+            const [pass, setPass] = useState("");
+            const [transactions, setTransactions] = useState([
+                { cliente: 'Investimento Inicial', categoria: 'Venda', valor: 148750, status: 'Receita', data: '2024-05-15' }
+            ]);
 
-            const menu = [
-                'Dashboard', 'Entradas', 'Saídas', 'Fluxo de Caixa', 'Funcionários', 
-                'Fornecedores', 'Boletos', 'PIX', 'Relatórios', 'Metas', 
-                'Impostos', 'Investimentos', 'Configurações'
-            ];
+            // Sistema de Login Simples
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if(user === "admin" && pass === "1234") {
+                    setIsLogged(true);
+                } else {
+                    alert("Acesso Negado: Credenciais Inválidas");
+                }
+            };
+
+            // Adicionar Lançamento Funcional
+            const addTransaction = (e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target);
+                const novo = {
+                    cliente: formData.get('desc'),
+                    valor: parseFloat(formData.get('valor')),
+                    status: formData.get('tipo'),
+                    categoria: formData.get('cat'),
+                    data: new Date().toLocaleDateString()
+                };
+                setTransactions([novo, ...transactions]);
+                e.target.reset();
+            };
+
+            if (!isLogged) {
+                return (
+                    <div className="min-h-screen flex items-center justify-center bg-[#000814] p-4">
+                        <div className="glass p-10 rounded-3xl w-full max-w-md glow-blue text-center border-t-4 border-blue-500">
+                            <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" className="w-24 mx-auto mb-6 drop-shadow-[0_0_15px_rgba(0,102,255,0.8)]" />
+                            <h1 className="tech-font text-3xl text-white mb-2">WOLF ACCESS</h1>
+                            <p className="text-blue-400 mb-8 text-sm tracking-widest">SISTEMA FINANCEIRO EY GROUP</p>
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <input type="text" placeholder="USUÁRIO" className="w-full bg-[#01153A] border border-blue-900 p-4 rounded-xl text-white outline-none focus:border-blue-500" onChange={(e)=>setUser(e.target.value)} />
+                                <input type="password" placeholder="SENHA" className="w-full bg-[#01153A] border border-blue-900 p-4 rounded-xl text-white outline-none focus:border-blue-500" onChange={(e)=>setPass(e.target.value)} />
+                                <button className="w-full bg-blue-600 hover:bg-blue-500 text-white tech-font py-4 rounded-xl transition-all shadow-lg">ENTRAR NO SISTEMA</button>
+                            </form>
+                        </div>
+                    </div>
+                );
+            }
 
             return (
-                <div className="min-h-screen flex bg-[#021B4B] text-white">
-                    <aside className="w-80 bg-[#01153A] p-6 flex flex-col justify-between shadow-2xl">
-                        <div>
-                            <div className="flex flex-col items-center mb-10">
-                                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-2xl mb-5">
-                                    <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" alt="Wolf Logo" className="w-24 h-24" />
-                                </div>
-                                <h1 className="text-5xl font-black tracking-wide">EY GROUP</h1>
-                                <p className="text-blue-200 text-lg mt-2">Sistema Financeiro Inteligente</p>
-                            </div>
-                            <nav className="space-y-3">
-                                {menu.map((item) => (
-                                    <button key={item} className="w-full bg-blue-700 hover:bg-blue-600 transition-all rounded-2xl px-5 py-4 text-left font-semibold shadow-lg">
-                                        {item}
-                                    </button>
-                                ))}
-                            </nav>
+                <div className="min-h-screen flex bg-[#000814] text-gray-100">
+                    {/* Sidebar Tech */}
+                    <aside className="w-72 bg-[#010B1D] border-r border-blue-900/30 p-6 hidden lg:flex flex-col">
+                        <div className="text-center mb-10">
+                            <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" className="w-16 mx-auto mb-4 grayscale hover:grayscale-0 transition-all" />
+                            <h2 className="tech-font text-xl font-black text-blue-500 tracking-tighter">EY GROUP</h2>
+                            <div className="h-1 w-12 bg-blue-600 mx-auto mt-2 rounded-full shadow-[0_0_10px_rgba(0,102,255,1)]"></div>
                         </div>
-                        <div className="bg-blue-700 rounded-3xl p-6 mt-8 shadow-2xl">
-                            <p className="text-blue-100">Saldo Empresarial</p>
-                            <h2 className="text-4xl font-black mt-3">R$ 148.750,00</h2>
-                            <p className="text-green-300 mt-2">Caixa positivo</p>
-                        </div>
+                        <nav className="flex-1 space-y-2">
+                            {['DASHBOARD', 'OPERAÇÕES', 'RELATÓRIOS', 'METAS AI'].map(item => (
+                                <button key={item} className="w-full text-left p-4 rounded-xl hover:bg-blue-900/20 hover:text-blue-400 transition-all text-xs font-bold tracking-widest border border-transparent hover:border-blue-800">
+                                    {item}
+                                </button>
+                            ))}
+                        </nav>
+                        <button onClick={() => setIsLogged(false)} className="text-red-500 text-xs font-bold mt-auto p-4 border border-red-900/30 rounded-xl hover:bg-red-900/10">SAIR</button>
                     </aside>
 
+                    {/* Main Content */}
                     <main className="flex-1 p-8 overflow-auto">
-                        <div className="flex justify-between items-center mb-10">
+                        <header className="flex justify-between items-end mb-12">
                             <div>
-                                <h2 className="text-5xl font-black">Painel Administrativo</h2>
-                                <p className="text-blue-200 mt-2 text-lg">Controle completo da sua empresa em tempo real</p>
+                                <h1 className="tech-font text-4xl text-white font-black uppercase italic">Terminal de Controle</h1>
+                                <p className="text-blue-500 font-mono text-sm tracking-tighter">STATUS: SISTEMA OPERACIONAL // USUÁRIO: ADMIN</p>
                             </div>
-                            <div className="flex gap-4">
-                                <button className="bg-green-600 px-6 py-4 rounded-2xl font-bold shadow-xl hover:bg-green-500 transition">Nova Receita</button>
-                                <button className="bg-red-600 px-6 py-4 rounded-2xl font-bold shadow-xl hover:bg-red-500 transition">Nova Despesa</button>
+                            <div className="text-right glass p-4 rounded-2xl px-8 border-l-4 border-green-500">
+                                <p className="text-xs text-gray-400 font-bold uppercase">Saldo em Custódia</p>
+                                <h3 className="tech-font text-3xl text-green-400 tracking-tighter">R$ {transactions.reduce((acc, curr) => curr.status === 'Receita' ? acc + curr.valor : acc - curr.valor, 0).toLocaleString()}</h3>
+                            </div>
+                        </header>
+
+                        {/* Grid de Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                            <div className="glass p-8 rounded-3xl border-b-4 border-blue-600 relative overflow-hidden group">
+                                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-600/10 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-all"></div>
+                                <p className="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">Total Receitas</p>
+                                <h2 className="tech-font text-3xl font-black">R$ 245.430</h2>
+                            </div>
+                            <div className="glass p-8 rounded-3xl border-b-4 border-red-600 relative overflow-hidden">
+                                <p className="text-xs font-bold text-red-400 uppercase tracking-widest mb-2">Saídas Mensais</p>
+                                <h2 className="tech-font text-3xl font-black">R$ 96.680</h2>
+                            </div>
+                            <div className="glass p-8 rounded-3xl border-b-4 border-purple-600 bg-gradient-to-br from-blue-900/20 to-transparent">
+                                <p className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">Performance</p>
+                                <h2 className="tech-font text-3xl font-black">+18.5%</h2>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-                            {dashboardCards.map((card) => (
-                                <div key={card.title} className="bg-white rounded-3xl p-7 text-black shadow-2xl">
-                                    <p className="text-gray-500 font-bold text-lg">{card.title}</p>
-                                    <h3 className={`text-4xl font-black mt-4 ${card.color}`}>{card.value}</h3>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
-                            <div className="bg-white text-black rounded-3xl p-6 shadow-2xl xl:col-span-2">
-                                <h3 className="text-3xl font-black mb-6">Lançamentos Financeiros</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <input type="text" placeholder="Descrição" className="border p-4 rounded-2xl" />
-                                    <input type="number" placeholder="Valor" className="border p-4 rounded-2xl" />
-                                    <select className="border p-4 rounded-2xl"><option>Entrada</option><option>Saída</option></select>
-                                    <select className="border p-4 rounded-2xl"><option>PIX</option><option>Cartão</option></select>
-                                </div>
-                                <button className="w-full mt-6 bg-blue-700 text-white py-5 rounded-2xl text-xl font-black shadow-xl">Salvar Lançamento</button>
+                        {/* Formulário de Lançamento */}
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                            <div className="glass p-8 rounded-3xl border border-blue-500/20">
+                                <h3 className="tech-font text-xl mb-6 flex items-center">
+                                    <span className="w-2 h-6 bg-blue-600 mr-3"></span> NOVO COMANDO FINANCEIRO
+                                </h3>
+                                <form onSubmit={addTransaction} className="grid grid-cols-2 gap-4">
+                                    <input name="desc" placeholder="DESCRIÇÃO" className="col-span-2 bg-[#000814] p-4 rounded-xl border border-blue-900 focus:border-blue-500 outline-none text-sm" required />
+                                    <input name="valor" type="number" placeholder="VALOR (R$)" className="bg-[#000814] p-4 rounded-xl border border-blue-900 focus:border-blue-500 outline-none text-sm" required />
+                                    <select name="tipo" className="bg-[#000814] p-4 rounded-xl border border-blue-900 focus:border-blue-500 outline-none text-sm">
+                                        <option value="Receita">RECEITA (+)</option>
+                                        <option value="Despesa">DESPESA (-)</option>
+                                    </select>
+                                    <select name="cat" className="col-span-2 bg-[#000814] p-4 rounded-xl border border-blue-900 focus:border-blue-500 outline-none text-sm">
+                                        <option>MARKETING</option>
+                                        <option>RH / SALÁRIOS</option>
+                                        <option>OPERACIONAL</option>
+                                        <option>INVESTIMENTOS</option>
+                                    </select>
+                                    <button className="col-span-2 bg-blue-700 hover:bg-blue-600 py-4 rounded-xl tech-font font-bold tracking-widest shadow-lg shadow-blue-900/20 transition-all">EXECUTAR LANÇAMENTO</button>
+                                </form>
                             </div>
-                            <div className="bg-white text-black rounded-3xl p-6 shadow-2xl">
-                                <h3 className="text-3xl font-black mb-6">Recursos Premium</h3>
-                                <div className="space-y-4">
-                                    {['Relatórios Automáticos', 'Controle de Metas', 'Sistema PIX'].map(f => (
-                                        <div key={f} className="bg-gray-100 p-4 rounded-2xl font-semibold">{f}</div>
+
+                            {/* Tabela de Movimentações */}
+                            <div className="glass p-8 rounded-3xl border border-blue-500/20">
+                                <h3 className="tech-font text-xl mb-6">HISTÓRICO DE LOGS</h3>
+                                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                                    {transactions.map((t, i) => (
+                                        <div key={i} className="flex justify-between items-center bg-[#01153A]/40 p-4 rounded-2xl border-l-4 border-blue-500 hover:bg-blue-900/20 transition-all">
+                                            <div>
+                                                <p className="font-bold text-sm uppercase">{t.cliente}</p>
+                                                <p className="text-[10px] text-blue-500 font-mono uppercase">{t.categoria} // {t.data}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className={`tech-font text-lg ${t.status === 'Receita' ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {t.status === 'Receita' ? '+' : '-'} R$ {t.valor.toLocaleString()}
+                                                </p>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>
@@ -110,7 +171,7 @@
         }
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<EYGroupFinanceApp />);
+        root.render(<EYGroupApp />);
     </script>
 </body>
 </html>

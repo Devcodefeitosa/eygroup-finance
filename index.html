@@ -23,89 +23,91 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 
     <script type="text/babel">
         const { useState, useEffect } = React;
+
+        // CONFIGURAÇÃO CONECTADA
+        const SUPABASE_URL = 'https://scuufsqhoucrzthtrmkk.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdXVmc3Fob3Vjcnp0aHRybWtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg4NjYzOTYsImV4cCI6MjA5NDQ0MjM5Nn0.QkAX7lAFk_m_GlN6iupUA2b1AnLsh2BHsT1jlzdff74';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function EYGroupApp() {
             const [view, setView] = useState('login');
             const [user, setUser] = useState("");
             const [pass, setPass] = useState("");
-            const [transactions, setTransactions] = useState([
-                { id: 1, desc: 'APORTE INICIAL', cat: 'INVESTIMENTOS', valor: 150000, tipo: 'Receita', data: '10/05/2024' },
-                { id: 2, desc: 'SERVIDORES AWS', cat: 'OPERACIONAL', valor: 1250, tipo: 'Despesa', data: '12/05/2024' }
-            ]);
+            const [transactions, setTransactions] = useState([]);
+            const [loading, setLoading] = useState(false);
+
+            useEffect(() => {
+                if (view === 'dashboard') { fetchFromDB(); }
+            }, [view]);
+
+            async function fetchFromDB() {
+                setLoading(true);
+                const { data, error } = await supabaseClient
+                    .from('transacoes')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                if (data) setTransactions(data);
+                setLoading(false);
+            }
 
             const handleLogin = (e) => {
                 e.preventDefault();
-                if(user === "admin" && pass === "1234") {
-                    setView('dashboard');
-                } else {
-                    alert("Acesso Negado: Credenciais Inválidas (Dica: admin / 1234)");
-                }
+                if(user === "admin" && pass === "1234") { setView('dashboard'); }
+                else { alert("Acesso Negado!"); }
             };
 
-            const addTransaction = (e) => {
+            const addTransaction = async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
-                const novo = {
-                    id: Date.now(),
-                    desc: formData.get('desc').toUpperCase(),
+                const nova = {
+                    descricao: formData.get('desc').toUpperCase(),
                     valor: parseFloat(formData.get('valor')),
                     tipo: formData.get('tipo'),
-                    cat: formData.get('cat'),
-                    data: new Date().toLocaleDateString('pt-BR')
+                    categoria: formData.get('cat')
                 };
-                setTransactions([novo, ...transactions]);
-                e.target.reset();
+                const { error } = await supabaseClient.from('transacoes').insert([nova]);
+                if (!error) { fetchFromDB(); e.target.reset(); }
+                else { alert("Erro ao salvar! Verifique se a tabela 'transacoes' foi criada no Supabase."); }
             };
 
-            const deleteTransaction = (id) => {
-                setTransactions(transactions.filter(t => t.id !== id));
+            const deleteTransaction = async (id) => {
+                const { error } = await supabaseClient.from('transacoes').delete().eq('id', id);
+                if (!error) fetchFromDB();
             };
 
             const saldo = transactions.reduce((acc, curr) => 
-                curr.tipo === 'Receita' ? acc + curr.valor : acc - curr.valor, 0
+                curr.tipo === 'Receita' ? acc + Number(curr.valor) : acc - Number(curr.valor), 0
             );
 
-            if (view === 'login' || view === 'register' || view === 'forgot') {
+            if (view !== 'dashboard') {
                 return (
                     <div className="min-h-screen flex items-center justify-center p-6 wolf-gradient">
                         <div className="glass p-10 rounded-[40px] w-full max-w-md glow-blue text-center border-t-2 border-blue-500/50">
-                            <img src="data:image/jpeg;base64,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" className="w-24 h-24 mx-auto mb-6 rounded-2xl shadow-2xl border border-blue-500/30 object-cover" />
-
+                            <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" className="w-24 h-24 mx-auto mb-6 rounded-2xl shadow-2xl border border-blue-500/30 object-cover" />
                             {view === 'login' && (
                                 <form onSubmit={handleLogin} className="space-y-4">
-                                    <h1 className="tech-font text-2xl mb-1 tracking-tighter text-blue-400">WOLF AUTH</h1>
-                                    <p className="text-xs text-gray-400 mb-8 tracking-[0.2em]">EY GROUP ALPHA TERMINAL</p>
-                                    <input type="text" placeholder="USUÁRIO" required className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl outline-none focus:border-blue-400 transition-all text-sm text-white" onChange={(e)=>setUser(e.target.value)} />
-                                    <input type="password" placeholder="SENHA" required className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl outline-none focus:border-blue-400 transition-all text-sm text-white" onChange={(e)=>setPass(e.target.value)} />
-                                    <button className="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl tech-font text-sm font-bold shadow-lg transition-all active:scale-95 text-white">ACESSAR SISTEMA</button>
-                                    <div className="flex justify-between text-[10px] font-bold text-blue-500 px-2 mt-4">
-                                        <button type="button" onClick={() => setView('register')} className="hover:text-white uppercase tracking-widest transition-colors">Criar Conta</button>
-                                        <button type="button" onClick={() => setView('forgot')} className="hover:text-white uppercase tracking-widest transition-colors">Esqueci a Senha</button>
+                                    <h1 className="tech-font text-2xl mb-1 text-blue-400 uppercase tracking-tighter">Wolf Auth</h1>
+                                    <p className="text-[10px] text-gray-500 mb-6 tracking-widest uppercase">EY Group Alpha Terminal</p>
+                                    <input type="text" placeholder="USUÁRIO" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl text-white outline-none focus:border-blue-400" onChange={(e)=>setUser(e.target.value)} />
+                                    <input type="password" placeholder="SENHA" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl text-white outline-none focus:border-blue-400" onChange={(e)=>setPass(e.target.value)} />
+                                    <button className="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-2xl tech-font font-bold text-sm transition-all active:scale-95">ACESSAR SISTEMA</button>
+                                    <div className="flex justify-between text-[10px] text-blue-500 font-bold mt-4">
+                                        <button type="button" onClick={() => setView('register')} className="hover:text-white">CRIAR CONTA</button>
+                                        <button type="button" onClick={() => setView('forgot')} className="hover:text-white">ESQUECI A SENHA</button>
                                     </div>
                                 </form>
                             )}
-
                             {view === 'register' && (
                                 <div className="space-y-4">
-                                    <h1 className="tech-font text-2xl mb-6 text-blue-400">NEW ALPHA</h1>
-                                    <input type="text" placeholder="NOME COMPLETO" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl outline-none text-sm text-white" />
-                                    <input type="email" placeholder="EMAIL CORPORATIVO" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl outline-none text-sm text-white" />
-                                    <input type="password" placeholder="DEFINIR SENHA" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl outline-none text-sm text-white" />
-                                    <button onClick={() => setView('login')} className="w-full bg-blue-600 py-4 rounded-2xl tech-font text-sm text-white">SOLICITAR ACESSO</button>
-                                    <button onClick={() => setView('login')} className="text-xs text-gray-500 block mx-auto hover:text-white">VOLTAR AO LOGIN</button>
-                                </div>
-                            )}
-
-                            {view === 'forgot' && (
-                                <div className="space-y-4">
-                                    <h1 className="tech-font text-2xl mb-6 text-blue-400">RECOVERY</h1>
-                                    <p className="text-xs text-gray-400 mb-4 px-4">Insira seu e-mail para receber o código de descriptografia e recuperação de acesso.</p>
-                                    <input type="email" placeholder="EMAIL DE RECUPERAÇÃO" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl outline-none text-sm text-white" />
-                                    <button onClick={() => setView('login')} className="w-full bg-blue-600 py-4 rounded-2xl tech-font text-sm text-white">ENVIAR CÓDIGO</button>
-                                    <button onClick={() => setView('login')} className="text-xs text-gray-500 block mx-auto hover:text-white">VOLTAR AO LOGIN</button>
+                                    <h1 className="tech-font text-2xl text-blue-400">NEW ALPHA</h1>
+                                    <input type="text" placeholder="NOME COMPLETO" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl text-white outline-none" />
+                                    <input type="email" placeholder="EMAIL" className="w-full bg-[#01153A]/50 border border-blue-900/50 p-4 rounded-2xl text-white outline-none" />
+                                    <button onClick={() => setView('login')} className="w-full bg-blue-600 py-4 rounded-2xl tech-font font-bold">SOLICITAR ACESSO</button>
+                                    <button onClick={() => setView('login')} className="text-xs text-gray-500">VOLTAR</button>
                                 </div>
                             )}
                         </div>
@@ -114,32 +116,30 @@
             }
 
             return (
-                <div className="min-h-screen flex bg-[#000814] text-white">
+                <div className="min-h-screen flex bg-[#000814]">
                     <aside className="w-72 bg-[#010B1D] border-r border-blue-900/30 p-8 hidden lg:flex flex-col">
                         <div className="mb-12 text-center">
-                            <img src="data:image/jpeg;base64,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" className="w-20 h-20 mx-auto mb-4 rounded-2xl border border-blue-500/20 object-cover shadow-2xl" />
-                            <h2 className="tech-font text-xl font-black text-white tracking-tighter">EY GROUP</h2>
+                            <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" className="w-16 h-16 mx-auto mb-4" />
+                            <h2 className="tech-font text-xl font-black text-white">EY GROUP</h2>
                             <span className="text-[10px] text-blue-500 font-bold tracking-[0.3em]">ALPHA V2.0</span>
                         </div>
-                        <nav className="flex-1 space-y-2">
-                            {['DASHBOARD', 'OPERAÇÕES', 'RELATÓRIOS', 'RECURSOS AI', 'SUPORTE'].map(item => (
-                                <button key={item} className="w-full text-left p-4 rounded-2xl hover:bg-blue-600/10 hover:text-blue-400 transition-all text-[11px] font-bold tracking-widest border border-transparent hover:border-blue-900/50">
-                                    {item}
-                                </button>
-                            ))}
+                        <nav className="flex-1 space-y-2 text-[11px] font-bold tracking-widest">
+                            <button className="w-full text-left p-4 rounded-2xl bg-blue-600/10 text-blue-400 border border-blue-900/50">DASHBOARD</button>
+                            <button className="w-full text-left p-4 rounded-2xl hover:bg-blue-600/10 transition-all border border-transparent hover:border-blue-900/50">OPERAÇÕES</button>
+                            <button className="w-full text-left p-4 rounded-2xl hover:bg-blue-600/10 transition-all border border-transparent hover:border-blue-900/50">RELATÓRIOS</button>
                         </nav>
-                        <button onClick={() => setView('login')} className="text-red-500 text-[11px] font-bold p-4 border border-red-900/20 rounded-2xl hover:bg-red-900/10 transition-all">TERMINAR SESSÃO</button>
+                        <button onClick={() => setView('login')} className="text-red-500 text-[11px] font-bold p-4 border border-red-900/20 rounded-2xl hover:bg-red-900/10">TERMINAR SESSÃO</button>
                     </aside>
 
                     <main className="flex-1 p-10 overflow-auto">
                         <header className="flex justify-between items-center mb-12">
                             <div>
                                 <h1 className="tech-font text-3xl text-white font-black italic">COMMAND CENTER</h1>
-                                <p className="text-blue-500 font-mono text-[10px] mt-1 tracking-widest">STATUS: CONEXÃO SEGURA // TOKEN: 0xFF142</p>
+                                <p className="text-blue-500 font-mono text-[10px] mt-1 tracking-widest uppercase">Status: Banco de Dados Conectado</p>
                             </div>
                             <div className="glass p-5 rounded-3xl border-l-4 border-blue-500 min-w-[240px]">
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Liquidez Total</p>
-                                <h3 className="tech-font text-2xl text-white tracking-tighter">R$ {saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
+                                <h3 className="tech-font text-2xl text-white tracking-tighter italic">R$ {saldo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</h3>
                             </div>
                         </header>
 
@@ -149,9 +149,9 @@
                                     <span className="w-1.5 h-4 bg-blue-600 mr-3"></span> INJETAR DADOS
                                 </h3>
                                 <form onSubmit={addTransaction} className="grid grid-cols-2 gap-4">
-                                    <input name="desc" placeholder="DESCRIÇÃO DA OPERAÇÃO" required className="col-span-2 bg-[#000814] p-4 rounded-2xl border border-blue-900/40 focus:border-blue-500 outline-none text-xs text-white" />
+                                    <input name="desc" placeholder="DESCRIÇÃO" required className="col-span-2 bg-[#000814] p-4 rounded-2xl border border-blue-900/40 focus:border-blue-500 outline-none text-xs text-white" />
                                     <input name="valor" type="number" step="0.01" placeholder="VALOR (R$)" required className="bg-[#000814] p-4 rounded-2xl border border-blue-900/40 focus:border-blue-500 outline-none text-xs text-white" />
-                                    <select name="tipo" className="bg-[#000814] p-4 rounded-2xl border border-blue-900/40 focus:border-blue-500 outline-none text-xs text-white appearance-none">
+                                    <select name="tipo" className="bg-[#000814] p-4 rounded-2xl border border-blue-900/40 focus:border-blue-500 outline-none text-xs text-white">
                                         <option value="Receita">RECEITA (+)</option>
                                         <option value="Despesa">DESPESA (-)</option>
                                     </select>
@@ -160,46 +160,30 @@
                                         <option>INFRAESTRUTURA</option>
                                         <option>FOLHA SALARIAL</option>
                                         <option>INVESTIMENTOS</option>
-                                        <option>LUCROS</option>
                                     </select>
-                                    <button className="col-span-2 bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl tech-font text-xs font-bold tracking-[0.2em] shadow-xl transition-all active:scale-95 mt-4 text-white">PROCESSAR LANÇAMENTO</button>
+                                    <button className="col-span-2 bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl tech-font text-xs font-bold shadow-xl transition-all active:scale-95 mt-4 text-white">PROCESSAR LANÇAMENTO</button>
                                 </form>
                             </div>
 
                             <div className="glass p-8 rounded-[40px] border border-blue-500/10">
-                                <h3 className="tech-font text-sm mb-8 text-blue-400 italic">SYSTEM LOGS</h3>
+                                <h3 className="tech-font text-sm mb-8 text-blue-400 italic">SYSTEM LOGS {loading && "..."}</h3>
                                 <div className="space-y-3 max-h-[420px] overflow-y-auto pr-3">
                                     {transactions.map((t) => (
                                         <div key={t.id} className="flex justify-between items-center bg-[#01153A]/30 p-5 rounded-3xl border border-blue-900/20 group hover:border-blue-500/40 transition-all">
                                             <div>
-                                                <p className="font-bold text-xs uppercase text-gray-200 tracking-tight">{t.desc}</p>
-                                                <p className="text-[9px] text-blue-500 font-mono mt-1 opacity-70">{t.cat} // {t.data}</p>
+                                                <p className="font-bold text-xs uppercase text-gray-200 tracking-tight">{t.descricao}</p>
+                                                <p className="text-[9px] text-blue-500 font-mono mt-1 opacity-70 uppercase">{t.categoria}</p>
                                             </div>
                                             <div className="text-right flex items-center gap-4">
-                                                <p className={"tech-font text-sm " + (t.tipo === 'Receita' ? 'text-green-400' : 'text-red-400')}>
-                                                    {t.tipo === 'Receita' ? '+' : '-'} {t.valor.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'})}
+                                                <p className={`tech-font text-sm ${t.tipo === 'Receita' ? 'text-green-400' : 'text-red-400'}`}>
+                                                    {t.tipo === 'Receita' ? '+' : '-'} R$ {Number(t.valor).toLocaleString('pt-BR')}
                                                 </p>
-                                                <button onClick={() => deleteTransaction(t.id)} className="opacity-0 group-hover:opacity-100 text-red-900 hover:text-red-500 transition-all text-xs">✖</button>
+                                                <button onClick={() => deleteTransaction(t.id)} className="opacity-0 group-hover:opacity-100 text-red-500 transition-all">✖</button>
                                             </div>
                                         </div>
                                     ))}
-                                    {transactions.length === 0 && <p className="text-center text-gray-600 text-xs py-10 font-mono">NENHUM DADO REGISTRADO</p>}
+                                    {transactions.length === 0 && !loading && <p className="text-center text-gray-600 text-xs py-10 font-mono italic">AGUARDANDO DADOS...</p>}
                                 </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-                            <div className="glass p-6 rounded-3xl border-b-2 border-green-500/50 hover:bg-green-500/5 transition-all">
-                                <p className="text-[10px] font-bold text-green-500 uppercase mb-1">Entradas Hoje</p>
-                                <h4 className="tech-font text-xl">R$ 14.200</h4>
-                            </div>
-                            <div className="glass p-6 rounded-3xl border-b-2 border-red-500/50 hover:bg-red-500/5 transition-all">
-                                <p className="text-[10px] font-bold text-red-500 uppercase mb-1">Saídas Hoje</p>
-                                <h4 className="tech-font text-xl">R$ 2.840</h4>
-                            </div>
-                            <div className="glass p-6 rounded-3xl border-b-2 border-blue-500/50 hover:bg-blue-500/5 transition-all">
-                                <p className="text-[10px] font-bold text-blue-500 uppercase mb-1">Margem Alpha</p>
-                                <h4 className="tech-font text-xl">82.4%</h4>
                             </div>
                         </div>
                     </main>

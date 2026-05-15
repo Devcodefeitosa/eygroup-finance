@@ -5,12 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>EY Group Finance</title>
+    <style>
+        body { margin: 0; padding: 0; }
+    </style>
 </head>
 <body>
     <div id="root"></div>
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-    <script type="text/babel" src="./ey_group_finance_app_react.jsx"></script>
-</head>
+    <script type="text/babel">
+        function EYGroupFinanceApp() {
+            const dashboardCards = [
+                { title: 'Receitas', value: 'R$ 245.430,00', color: 'text-green-600' },
+                { title: 'Despesas', value: 'R$ 96.680,00', color: 'text-red-600' },
+                { title: 'Lucro Líquido', value: 'R$ 148.750,00', color: 'text-blue-700' },
+                { title: 'Fluxo de Caixa', value: '+18%', color: 'text-purple-700' },
+            ];
+
+            const transactions = [
+                { cliente: 'Cliente Premium', categoria: 'Venda', valor: 'R$ 12.450,00', status: 'Receita' },
+                { cliente: 'Meta Ads', categoria: 'Marketing', valor: 'R$ 3.200,00', status: 'Despesa' },
+                { cliente: 'Funcionários', categoria: 'RH', valor: 'R$ 8.900,00', status: 'Despesa' },
+            ];
+
+            const menu = [
+                'Dashboard', 'Entradas', 'Saídas', 'Fluxo de Caixa', 'Funcionários', 
+                'Fornecedores', 'Boletos', 'PIX', 'Relatórios', 'Metas', 
+                'Impostos', 'Investimentos', 'Configurações'
+            ];
+
+            return (
+                <div className="min-h-screen flex bg-[#021B4B] text-white">
+                    <aside className="w-80 bg-[#01153A] p-6 flex flex-col justify-between shadow-2xl">
+                        <div>
+                            <div className="flex flex-col items-center mb-10">
+                                <div className="w-32 h-32 bg-white rounded-full flex items-center justify-center overflow-hidden shadow-2xl mb-5">
+                                    <img src="https://cdn-icons-png.flaticon.com/512/616/616554.png" alt="Wolf Logo" className="w-24 h-24" />
+                                </div>
+                                <h1 className="text-5xl font-black tracking-wide">EY GROUP</h1>
+                                <p className="text-blue-200 text-lg mt-2">Sistema Financeiro Inteligente</p>
+                            </div>
+                            <nav className="space-y-3">
+                                {menu.map((item) => (
+                                    <button key={item} className="w-full bg-blue-700 hover:bg-blue-600 transition-all rounded-2xl px-5 py-4 text-left font-semibold shadow-lg">
+                                        {item}
+                                    </button>
+                                ))}
+                            </nav>
+                        </div>
+                        <div className="bg-blue-700 rounded-3xl p-6 mt-8 shadow-2xl">
+                            <p className="text-blue-100">Saldo Empresarial</p>
+                            <h2 className="text-4xl font-black mt-3">R$ 148.750,00</h2>
+                            <p className="text-green-300 mt-2">Caixa positivo</p>
+                        </div>
+                    </aside>
+
+                    <main className="flex-1 p-8 overflow-auto">
+                        <div className="flex justify-between items-center mb-10">
+                            <div>
+                                <h2 className="text-5xl font-black">Painel Administrativo</h2>
+                                <p className="text-blue-200 mt-2 text-lg">Controle completo da sua empresa em tempo real</p>
+                            </div>
+                            <div className="flex gap-4">
+                                <button className="bg-green-600 px-6 py-4 rounded-2xl font-bold shadow-xl hover:bg-green-500 transition">Nova Receita</button>
+                                <button className="bg-red-600 px-6 py-4 rounded-2xl font-bold shadow-xl hover:bg-red-500 transition">Nova Despesa</button>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+                            {dashboardCards.map((card) => (
+                                <div key={card.title} className="bg-white rounded-3xl p-7 text-black shadow-2xl">
+                                    <p className="text-gray-500 font-bold text-lg">{card.title}</p>
+                                    <h3 className={`text-4xl font-black mt-4 ${card.color}`}>{card.value}</h3>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
+                            <div className="bg-white text-black rounded-3xl p-6 shadow-2xl xl:col-span-2">
+                                <h3 className="text-3xl font-black mb-6">Lançamentos Financeiros</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <input type="text" placeholder="Descrição" className="border p-4 rounded-2xl" />
+                                    <input type="number" placeholder="Valor" className="border p-4 rounded-2xl" />
+                                    <select className="border p-4 rounded-2xl"><option>Entrada</option><option>Saída</option></select>
+                                    <select className="border p-4 rounded-2xl"><option>PIX</option><option>Cartão</option></select>
+                                </div>
+                                <button className="w-full mt-6 bg-blue-700 text-white py-5 rounded-2xl text-xl font-black shadow-xl">Salvar Lançamento</button>
+                            </div>
+                            <div className="bg-white text-black rounded-3xl p-6 shadow-2xl">
+                                <h3 className="text-3xl font-black mb-6">Recursos Premium</h3>
+                                <div className="space-y-4">
+                                    {['Relatórios Automáticos', 'Controle de Metas', 'Sistema PIX'].map(f => (
+                                        <div key={f} className="bg-gray-100 p-4 rounded-2xl font-semibold">{f}</div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<EYGroupFinanceApp />);
+    </script>
+</body>
+</html>
